@@ -17,14 +17,7 @@ function OrderCard({ order, loadOrders }) {
   };
 
   return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        padding: "15px",
-        marginBottom: "10px",
-        borderRadius: "5px",
-      }}
-    >
+   <div className="order-card">
       <h3>{order.customerName}</h3>
 
       <p>
@@ -37,16 +30,23 @@ function OrderCard({ order, loadOrders }) {
 
       <h4>Items</h4>
 
-      {order.items.map((item, index) => (
-        <div key={index}>
-          <p>
-            {item.name} - ₹{item.price} × {item.quantity}
-          </p>
-        </div>
-      ))}
+   <div className="order-items">
+  {order.items.map((item, index) => (
+    <div
+      key={index}
+      className="order-item"
+    >
+      {item.name} - ₹{item.price} × {item.quantity}
+    </div>
+  ))}
+</div>
 
       <br />
-
+<span
+  className={`status ${order.status.toLowerCase()}`}
+>
+  {order.status}
+</span>
       <select
         value={order.status}
         onChange={handleStatusChange}

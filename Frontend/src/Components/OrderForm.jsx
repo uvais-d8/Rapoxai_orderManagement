@@ -7,92 +7,263 @@ function OrderForm({ loadOrders }) {
   const [items, setItems] = useState([
     {
       name: "",
-      price: 0,
-      quantity: 0,
+      price: "",
+      quantity: "",
     },
   ]);
 
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (index, field, value) => {
+    const updatedItems = [...items];
+
+    updatedItems[index][field] = value;
+
+    setItems(updatedItems);
+
+    setErrors((prev) => ({
+      ...prev,
+      [`${field}-${index}`]: "",
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!customerName.trim()) {
+      newErrors.customerName = "Customer name is required";
+    } else if (customerName.trim().length < 3) {
+      newErrors.customerName =
+        "Customer name must be at least 3 characters";
+    }
+
+    items.forEach((item, index) => {
+      if (!item.name.trim()) {
+        newErrors[`name-${index}`] =
+          "Item name is required";
+      }
+
+      if (!item.price || Number(item.price) <= 0) {
+        newErrors[`price-${index}`] =
+          "Price must be greater than 0";
+      }
+
+      if (!item.quantity || Number(item.quantity) <= 0) {
+        newErrors[`quantity-${index}`] =
+          "Quantity must be greater than 0";
+      }
+    });
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const addItem = () => {
+    const newErrors = {};
+
+    items.forEach((item, index) => {
+      if (!item.name.trim()) {
+        newErrors[`name-${index}`] =
+          "Item name is required";
+      }
+
+      if (!item.price || Number(item.price) <= 0) {
+        newErrors[`price-${index}`] =
+          "Enter a valid price";
+      }
+
+      if (!item.quantity || Number(item.quantity) <= 0) {
+        newErrors[`quantity-${index}`] =
+          "Enter a valid quantity";
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+
     setItems([
-      ...items,     
+      ...items,
       {
         name: "",
-        price: 0,
-        quantity: 0,
+        price: "",
+        quantity: "",
       },
     ]);
   };
 
-  const handleChange = (index, field, value) => {
-    const updated = [...items];
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    updated[index][field] = value;
+  const newErrors = {};
 
-    setItems(updated);
-  };
+  if (!customerName.trim()) {
+    newErrors.customerName =
+      "Customer name is required";
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  if (items.length === 0) {
+    newErrors.items =
+      "Please add at least one item";
+  }
 
-    await createOrder({
-      customerName,
-      items,
-    });
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
 
-    loadOrders();
-  };
+  await createOrder({
+    customerName,
+    items,
+  });
+
+  await loadOrders();
+
+  setCustomerName("");
+
+  setItems([
+    {
+      name: "",
+      price: "",
+      quantity: "",
+    },
+  ]);
+
+  setErrors({});
+};
 
   const total = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) =>
+      sum +
+      Number(item.price || 0) *
+        Number(item.quantity || 0),
     0
   );
 
   return (
-    <>
+    <div className="order-form">
       <h2>Create Order</h2>
 
-      <input
-        placeholder="Customer Name"
-        onChange={(e) => setCustomerName(e.target.value)}
-      />
+      <div>
+        <input
+          type="text"
+          placeholder="Customer Name"
+          value={customerName}
+          onChange={(e) => {
+            setCustomerName(e.target.value);
+
+            setErrors((prev) => ({
+              ...prev,
+              customerName: "",
+            }));
+          }}
+        />
+
+        {errors.customerName && (
+          <p className="error">
+            {errors.customerName}
+          </p>
+        )}
+      </div>
 
       {items.map((item, index) => (
-        <div key={index}>
-          <input
-            placeholder="Item Name"
-            onChange={(e) =>
-              handleChange(index, "name", e.target.value)
-            }
-          />
+        <div
+          key={index}
+          className="item-card"
+        >
+          <h4>Item {index + 1}</h4>
 
-          <input
-            type="number"
-            placeholder="Price"
-            onChange={(e) =>
-              handleChange(index, "price", Number(e.target.value))
-            }
-          />
+          <div>
+            <input
+              type="text"
+              placeholder="Item Name"
+              value={item.name}
+              onChange={(e) =>
+                handleChange(
+                  index,
+                  "name",
+                  e.target.value
+                )
+              }
+            />
 
-          <input
-            type="number"
-            placeholder="Quantity"
-            onChange={(e) =>
-              handleChange(index, "quantity", Number(e.target.value))
-            }
-          />
+            {errors[`name-${index}`] && (
+              <p className="error">
+                {errors[`name-${index}`]}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="number"
+              placeholder="Price"
+              value={item.price}
+              onChange={(e) =>
+                handleChange(
+                  index,
+                  "price",
+                  e.target.value
+                )
+              }
+            />
+
+            {errors[`price-${index}`] && (
+              <p className="error">
+                {errors[`price-${index}`]}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="number"
+              placeholder="Quantity"
+              value={item.quantity}
+              onChange={(e) =>
+                handleChange(
+                  index,
+                  "quantity",
+                  e.target.value
+                )
+              }
+            />
+
+            {errors[`quantity-${index}`] && (
+              <p className="error">
+                {errors[`quantity-${index}`]}
+              </p>
+            )}
+          </div>
         </div>
       ))}
 
-      <button onClick={addItem}>
-        Add Item
-      </button>
+      <h3 className="total">
+        Total: ₹{total}
+      </h3>
 
-      <h3>Total: ₹{total}</h3>
+      <div className="button-group">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={addItem}
+        >
+          Add Item
+        </button>
 
-      <button onClick={handleSubmit}>
-        Create Order
-      </button>
-    </>
+        <button
+          type="button"
+          className="btn btn-success"
+          onClick={handleSubmit}
+        >
+          Create Order
+        </button>
+      </div>
+    </div>
   );
 }
 
