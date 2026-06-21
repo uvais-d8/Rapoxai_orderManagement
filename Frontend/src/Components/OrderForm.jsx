@@ -96,7 +96,7 @@ function OrderForm({ loadOrders }) {
     ]);
   };
 
- const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
   const newErrors = {};
@@ -106,9 +106,16 @@ function OrderForm({ loadOrders }) {
       "Customer name is required";
   }
 
-  if (items.length === 0) {
+  const validItems = items.filter(
+    (item) =>
+      item.name.trim() &&
+      Number(item.price) > 0 &&
+      Number(item.quantity) > 0
+  );
+
+  if (validItems.length === 0) {
     newErrors.items =
-      "Please add at least one item";
+      "Please add at least one valid item";
   }
 
   if (Object.keys(newErrors).length > 0) {
@@ -118,7 +125,7 @@ function OrderForm({ loadOrders }) {
 
   await createOrder({
     customerName,
-    items,
+    items: validItems,
   });
 
   await loadOrders();
@@ -147,7 +154,6 @@ function OrderForm({ loadOrders }) {
   return (
     <div className="order-form">
       <h2>Create Order</h2>
-
       <div>
         <input
           type="text"
@@ -177,6 +183,11 @@ function OrderForm({ loadOrders }) {
         >
           <h4>Item {index + 1}</h4>
 
+{errors.items && (
+  <p className="error">
+    {errors.items}
+  </p>
+)}
           <div>
             <input
               type="text"
