@@ -26,13 +26,13 @@ const getOrders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   const { status } = req.body;
 
-  const order = await Order.findByIdAndUpdate(
+  const updatedOrder = await Order.findByIdAndUpdate(
     req.params.id,
     { status },
     { new: true }
   );
 
-  res.json(order);
+  res.json(updatedOrder);
 };
 
 module.exports = {
